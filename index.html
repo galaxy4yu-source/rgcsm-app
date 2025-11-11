@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RGCSM Management</title>
+
+<meta name="theme-color" content="#06b6d4">
+<link rel="manifest" href="./manifest.json">
+
+<style>
+  :root{--bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#06b6d4; --accent-2:#7c3aed;}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07102a 0%, #081226 60%);color:#e6eef8}
+  .wrap{max-width:1150px;margin:20px auto;padding:18px}
+  header{display:flex;align-items:center;gap:12px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021025}
+  h1{margin:0;font-size:18px}
+  .subtitle{color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 420px 320px;gap:14px;margin-top:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:12px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+  input,select,textarea,button{font:inherit}
+  input,select,textarea{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;padding:8px 10px;border-radius:8px;outline:none}
+  .row{display:flex;gap:8px}
+  label{color:var(--muted);font-size:13px;margin-bottom:6px;display:block}
+  .btn{background:var(--accent);border:none;color:#021025;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent);padding:6px 8px;border-radius:8px}
+  .small{font-size:13px;padding:6px 8px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  th,td{padding:8px;text-align:left;font-size:13px;border-bottom:1px dashed rgba(255,255,255,0.03);color:#e6eef8}
+  th{color:var(--muted);font-weight:600}
+  .status{margin-top:10px;padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015));border:1px solid rgba(255,255,255,0.02);font-size:13px}
+  .muted-sm{color:var(--muted);font-size:13px}
+  .present{background:#052e24;color:#a7f3d0;padding:4px 8px;border-radius:999px;font-size:12px}
+  .absent{background:#432f05;color:#ffd8a8;padding:4px 8px;border-radius:999px;font-size:12px}
+  .center{text-align:center}
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  canvas{width:100%;height:160px;background:transparent;border-radius:6px}
+  .log{margin-top:10px;max-height:120px;overflow:auto;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;font-size:12px;color:var(--muted)}
+  .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+  .install-btn{display:none;background:#0ea5a4;color:#012; padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">RG</div>
+        <div>
+          <h1>RGCSM Management</h1>
+          <div class="subtitle">Installable app — offline ready</div>
+        </div>
+      </div>
+      <div style="margin-left:auto" class="tools">
+        <button class="btn small" id="btn-sample">Add Sample</button>
+        <button class="btn-ghost small" id="btn-backup">Download Backup</button>
+        <button class="btn-ghost small" id="btn-import">Import JSON</button>
+        <input type="file" id="file-import" accept="application/json" style="display:none"/>
+        <button id="installBtn" class="install-btn small">Install App</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Students</strong>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="search" placeholder="Search name,phone,course" style="width:220px"/>
+            <button class="btn small" id="btn-export">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="status" id="save-status">Status: <span id="status-msg">Ready</span></div>
+
+        <div style="margin-top:12px;max-height:410px;overflow:auto">
+          <table id="table-students">
+            <thead><tr><th>Name</th><th>Course</th><th>Phone</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="log" id="error-log" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <strong>Admission / Edit</strong>
+        <div style="margin-top:10px">
+          <label>Name</label><input id="name" placeholder="Full name"/>
+          <label style="margin-top:8px">Phone</label><input id="phone" placeholder="Phone number"/>
+          <div class="row" style="margin-top:8px">
+            <div style="flex:1">
+              <label>Course</label><input id="course" placeholder="DCA, Tally, Basic"/>
+            </div>
+            <div style="width:160px">
+              <label>Fee</label><input id="fee" type="number" value="0"/>
+            </div>
+          </div>
+          <label style="margin-top:8px">Notes</label><input id="notes" />
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" id="btn-save">Save</button>
+            <button class="btn-ghost" id="btn-reset">Reset</button>
+            <button class="btn-ghost" id="btn-delete" style="display:none;color:#ffb4b4">Delete</button>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)"/>
+
+        <strong>Payment</strong>
+        <div style="margin-top:8px">
+          <label>Select Student</label>
+          <select id="pay-select" style="width:100%"></select>
+          <div class="row" style="margin-top:8px">
+            <div style="flex:1"><label>Amount</label><input id="pay-amount" type="number"/></div>
+            <div style="width:150px"><label>Mode</label><select id="pay-mode"><option>Cash</option><option>UPI</option><option>Online</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" id="btn-pay">Record</button>
+            <button class="btn-ghost" id="btn-view-pay">View Payments</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <strong>Quick Stats</strong>
+        <div style="margin-top:10px" class="muted-sm">
+          Total students: <span id="stat-total">0</span><br/>
+          Present: <span id="stat-present">0</span><br/>
+          Collected: <span id="stat-collected">₹0</span><br/>
+          Due: <span id="stat-due">₹0</span>
+        </div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)"/>
+        <strong>Performance</strong>
+        <canvas id="chart"></canvas>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-ghost small" id="print-adm">Print Admissions</button>
+          <button class="btn-ghost small" id="print-dues">Print Dues</button>
+          <button class="btn-ghost small" id="print-att">Print Attendance</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">Made for RGCSM Computer — installable PWA-ready</div>
+  </div>
+
+<script>
+// Full advanced single-file app logic (localStorage), offline-friendly
+const LS_KEY = 'rgcsm_pwa_v1';
+let students = [], payments = [];
+
+const statusMsgEl = id('status-msg'), logEl = id('error-log'), tbody = document.querySelector('#table-students tbody'), search = id('search'), paySelect = id('pay-select');
+
+let deferredPrompt = null;
+const installBtn = id('installBtn');
+
+function id(v){ return document.getElementById(v); }
+function uid(){ return 'id'+Math.random().toString(36).slice(2,9); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function log(msg){ const p=document.createElement('div'); p.textContent = (new Date()).toLocaleTimeString() + ' — ' + msg; logEl.prepend(p); console.log(msg); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const o = JSON.parse(raw);
+      students = o.students||[]; payments = o.payments||[];
+      setStatus('Loaded saved data');
+    } else {
+      students=[]; payments=[];
+      setStatus('No saved data (fresh)');
+    }
+  }catch(e){
+    log('Load failed: ' + e);
+    setStatus('Storage blocked');
+    students=[]; payments=[];
+  }
+}
+
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify({students,payments})); setStatus('Saved '+new Date().toLocaleTimeString()); }catch(e){ log('Save failed: '+e); setStatus('Save failed'); } renderAll(); }
+
+function setStatus(t){ statusMsgEl.textContent = t; }
+
+function renderStudents(q=''){
+  tbody.innerHTML=''; const qq=(q||'').toLowerCase();
+  students.forEach(s=>{
+    if(qq){
+      const found = (s.name||'').toLowerCase().includes(qq) || (s.phone||'').includes(qq) || (s.course||'').toLowerCase().includes(qq);
+      if(!found) return;
+    }
+    const due = Math.max(0,(s.fee||0)-(s.totalPaid||0));
+    const tr = document.createElement('tr'); tr.dataset.id = s.id;
+    tr.innerHTML = `<td><strong>${escapeText(s.name||'—')}</strong><div class="muted-sm">${escapeText(s.notes||'')}</div></td><td>${escapeText(s.course||'—')}</td><td>${escapeText(s.phone||'—')}</td><td>₹${due}</td><td>${s.present?'<span class="present">Present</span>':'<span class="absent">Absent</span>'}</td><td class="center"><button data-act="profile" class="small">Profile</button> <button data-act="edit" class="small">Edit</button> <button data-act="toggle" class="small">${s.present?'Check-out':'Check-in'}</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSelects(){ paySelect.innerHTML=''; students.forEach(s=>{ const opt = document.createElement('option'); opt.value=s.id; opt.textContent = s.name + ' (' + (s.course||'') + ')'; paySelect.appendChild(opt); }); }
+
+function renderStats(){
+  id('stat-total').textContent = students.length;
+  id('stat-present').textContent = students.filter(s=>s.present).length;
+  const collected = payments.reduce((a,p)=>a+p.amount,0);
+  id('stat-collected').textContent = '₹'+collected;
+  const totalFee = students.reduce((a,s)=>a+(s.fee||0),0);
+  id('stat-due').textContent = '₹'+Math.max(0,totalFee-collected);
+  renderChart();
+}
+
+function renderChart(){
+  const canvas = id('chart'); const ctx = canvas.getContext('2d');
+  const byCourse = {};
+  students.forEach(s=>{
+    const course = s.course||'Other';
+    const avg = (s.scores && s.scores.length) ? s.scores.reduce((a,b)=>a+b,0)/s.scores.length : null;
+    if(!byCourse[course]) byCourse[course] = {sum:0,count:0};
+    if(avg!==null){ byCourse[course].sum += avg; byCourse[course].count += 1; }
+  });
+  const labels = Object.keys(byCourse); const data = labels.map(l => Math.round(byCourse[l].count ? (byCourse[l].sum / byCourse[l].count) : 0));
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const w = canvas.width = canvas.clientWidth;
+  const h = canvas.height = canvas.clientHeight;
+  if(labels.length===0){ ctx.fillStyle='#9fb6c8'; ctx.font='14px sans-serif'; ctx.fillText('No scores to display',10,24); return; }
+  const padding=20; const max = Math.max(100, ...data); const barW = (w - padding*2) / labels.length * 0.6;
+  labels.forEach((lab, i)=>{
+    const x = padding + i * ((w - padding*2)/labels.length) + ((w - padding*2)/labels.length - barW)/2;
+    const barH = ( (data[i]||0) / max ) * (h - padding*2);
+    const y = h - padding - barH;
+    const grad = ctx.createLinearGradient(x,y,x,y+barH); grad.addColorStop(0, '#06b6d4'); grad.addColorStop(1, '#7c3aed');
+    ctx.fillStyle = grad; ctx.fillRect(x, y, barW, barH);
+    ctx.fillStyle = 'rgba(230,238,248,0.9)'; ctx.font = '12px sans-serif'; ctx.fillText(lab, x, h - 6); ctx.fillText((data[i]||0)+'%', x, y - 6);
+  });
+}
+
+function escapeText(s){ return String(s||'').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"}[c])); }
+
+function startEdit(idv){ const s = students.find(x=>x.id===idv); if(!s) return; id('name').value = s.name; id('phone').value = s.phone; id('course').value = s.course; id('fee').value = s.fee||0; id('notes').value = s.notes||''; id('btn-save').dataset.edit = s.id; id('btn-delete').style.display='inline-block'; setStatus('Editing '+s.name); }
+
+function saveStudent(){
+  const name = id('name').value.trim(); if(!name){ alert('Enter name'); return; }
+  const phone = id('phone').value.trim(); const course = id('course').value.trim(); const fee = Number(id('fee').value) || 0; const notes = id('notes').value;
+  const editId = id('btn-save').dataset.edit;
+  if(editId){ const s = students.find(x=>x.id===editId); if(!s) return; Object.assign(s,{name,phone,course,fee,notes}); setStatus('Updated '+name); } else { students.push({id:uid(),name,phone,course,fee,totalPaid:0,notes,present:false,attendance:[],scores:[]}); setStatus('Saved '+name); }
+  id('btn-save').dataset.edit=''; id('btn-delete').style.display='none'; resetForm(); save();
+}
+
+function resetForm(){ id('name').value=''; id('phone').value=''; id('course').value=''; id('fee').value='0'; id('notes').value=''; id('btn-delete').style.display='none'; id('btn-save').dataset.edit=''; setStatus('Ready'); }
+
+function deleteCurrent(){ const idv = id('btn-save').dataset.edit; if(!idv) return; if(!confirm('Delete this student?')) return; students = students.filter(s=>s.id!==idv); payments = payments.filter(p=>p.studentId!==idv); id('btn-save').dataset.edit=''; id('btn-delete').style.display='none'; save(); }
+
+function makePayment(){ const sid = paySelect.value; if(!sid){ alert('Select student'); return; } const amt = Number(id('pay-amount').value) || 0; if(amt<=0){ alert('Enter valid amount'); return; } const mode = id('pay-mode').value; payments.push({id:uid(),studentId:sid,amount:amt,mode,date:today()}); const s = students.find(x=>x.id===sid); if(s) s.totalPaid = (s.totalPaid||0)+amt; id('pay-amount').value=''; setStatus('Payment recorded'); save(); }
+
+function viewPayments(){
+  if(payments.length===0){ alert('No payments yet'); return; }
+  alert(payments.map(p=>`${p.date} • ${(students.find(s=>s.id===p.studentId)||{name:'?' }).name} • ₹${p.amount} • ${p.mode}`).join('\n'));
+}
+
+function openProfile(idv){
+  const s = students.find(x=>x.id===idv); if(!s) return;
+  let msg = `Name: ${s.name}\nCourse: ${s.course}\nPhone: ${s.phone}\nFee: ₹${s.fee}\nPaid: ₹${s.totalPaid||0}\nDue: ₹${Math.max(0,(s.fee||0)-(s.totalPaid||0))}\n\nScores: ${ (s.scores && s.scores.length) ? s.scores.join(', ') : 'None' }\n\nAttendance (recent):\n`;
+  (s.attendance||[]).slice(-6).reverse().forEach(a=> msg += `${a.type.toUpperCase()} ${new Date(a.time).toLocaleString()}\n`);
+  const cmd = prompt(msg + '\n\nCommands:\n1 = Add score\n2 = Remove last score\n3 = Download student report\nCancel to close');
+  if(!cmd) return;
+  if(cmd.trim()==='1'){ const sc = prompt('Enter score (0-100)'); const n=Number(sc); if(!isNaN(n) && n>=0 && n<=100){ s.scores = s.scores||[]; s.scores.push(n); save(); alert('Added score '+n); }else alert('Invalid'); }
+  else if(cmd.trim()==='2'){ if(s.scores && s.scores.length){ const r = s.scores.pop(); save(); alert('Removed '+r);} else alert('No scores'); }
+  else if(cmd.trim()==='3'){ downloadStudentReport(idv); }
+}
+
+function downloadStudentReport(idv){
+  const s = students.find(x=>x.id===idv); if(!s) return;
+  const sp = payments.filter(p=>p.studentId===idv).map(p=>`${p.date} • ₹${p.amount} • ${p.mode}`).join('\n') || 'No payments';
+  const txt = `Report - ${s.name}\nCourse: ${s.course}\nPhone: ${s.phone}\nAdmission: ${s.admission||''}\n\nScores: ${(s.scores||[]).join(', ') || 'None'}\n\nPayments:\n${sp}\n\nTotal Fee: ₹${s.fee||0}\nPaid: ₹${s.totalPaid||0}\nDue: ₹${Math.max(0,(s.fee||0)-(s.totalPaid||0))}`;
+  downloadText(txt, `student_${s.name.replace(/\s+/g,'_')}.txt`);
+}
+
+function exportCSV(){
+  const rows = ['Name,Phone,Course,Fee,TotalPaid,Notes,Due'];
+  students.forEach(s=> rows.push([s.name,s.phone,s.course,s.fee||0,s.totalPaid||0,(s.notes||'').replace(/,/g,' '), Math.max(0,(s.fee||0)-(s.totalPaid||0))].join(',')));
+  downloadText(rows.join('\n'),'rgcsm_students.csv');
+}
+
+function downloadText(txt, fn){ const blob = new Blob([txt],{type:'text/plain'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=fn; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+function printAdmissions(){
+  const html = '<html><head><title>Admissions</title></head><body><h2>Admissions</h2>' + students.map(s=>`<div>${s.name} - ${s.course} - ${s.phone} - ₹${s.fee||0}</div>`).join('') + '</body></html>';
+  const w = window.open(); w.document.write(html); w.document.close(); w.print();
+}
+
+function printDues(){ alert(students.filter(s=> (s.fee||0)-(s.totalPaid||0)>0).map(s=>`${s.name} - ₹${(s.fee||0)-(s.totalPaid||0)}`).join('\n') || 'No dues'); }
+function printAttendance(){ const html = '<html><head><title>Attendance</title></head><body><h2>Attendance</h2>' + students.map(s=>`<div>${s.name} - ${(s.attendance||[]).slice(-5).reverse().map(a=>a.type+' '+new Date(a.time).toLocaleString()).join(', ')}</div>`).join('') + '</body></html>'; const w = window.open(); w.document.write(html); w.document.close(); w.print(); }
+
+function renderAll(){ renderStudents(id('search').value||''); renderSelects(); renderStats(); }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  load(); renderAll();
+
+  // Buttons
+  id('btn-sample').addEventListener('click', ()=>{ const sample=[{id:uid(),name:'Rahul Sharma',phone:'9876543210',course:'DCA',fee:8000,totalPaid:2000,notes:'Morning',present:false,attendance:[],scores:[70,75]},{id:uid(),name:'Anita Verma',phone:'9123456780',course:'Tally',fee:6000,totalPaid:6000,notes:'Evening',present:false,attendance:[],scores:[85,88]},{id:uid(),name:'Suresh Kumar',phone:'9988776655',course:'Basic',fee:3000,totalPaid:0,notes:'Weekends',present:false,attendance:[],scores:[50,60]}]; sample.forEach(s=>students.push(s)); payments.push({id:uid(),studentId:students[0].id,amount:2000,mode:'Cash',date:today()}); payments.push({id:uid(),studentId:students[1].id,amount:6000,mode:'UPI',date:today()}); save(); });
+  id('btn-backup').addEventListener('click', ()=> downloadText(JSON.stringify({students,payments},null,2),'rgcsm_backup_'+today()+'.json') );
+  id('btn-export').addEventListener('click', exportCSV);
+  id('btn-import').addEventListener('click', ()=> id('file-import').click());
+  id('file-import').addEventListener('change', e=>{ if(e.target.files.length){ const r=new FileReader(); r.onload = ev => { try{ const obj = JSON.parse(ev.target.result); if(Array.isArray(obj.students)) students = obj.students; if(Array.isArray(obj.payments)) payments = obj.payments; save(); alert('Imported'); }catch(err){ alert('Invalid file') } }; r.readAsText(e.target.files[0]); } e.target.value=''; });
+  id('btn-save').addEventListener('click', saveStudent);
+  id('btn-reset').addEventListener('click', resetForm);
+  id('btn-delete').addEventListener('click', deleteCurrent);
+  id('btn-pay').addEventListener('click', makePayment);
+  id('btn-view-pay').addEventListener('click', viewPayments);
+  tbody.addEventListener('click', ev=>{ const b = ev.target.closest('button'); if(!b) return; const tr = ev.target.closest('tr'); if(!tr) return; const idv = tr.dataset.id; const act = b.dataset.act; if(act==='edit') startEdit(idv); else if(act==='toggle'){ const s = students.find(x=>x.id===idv); if(!s) return; s.present = !s.present; s.attendance = s.attendance||[]; s.attendance.push({type: s.present?'in':'out', time: new Date().toISOString()}); save(); } else if(act==='profile'){ openProfile(idv); } });
+  id('search').addEventListener('input', ()=> renderStudents(id('search').value||''));
+  id('print-adm').addEventListener('click', printAdmissions);
+  id('print-dues').addEventListener('click', printDues);
+  id('print-att').addEventListener('click', printAttendance);
+
+  // PWA: capture beforeinstallprompt to show an install button
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if(choice.outcome === 'accepted') {
+      setStatus('App installed (user accepted)');
+    } else {
+      setStatus('Install dismissed');
+    }
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+
+  // register service worker (relative path so it works locally and on GitHub Pages in folder)
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./service-worker.js').then(reg => {
+      console.log('SW registered', reg.scope);
+    }).catch(err => {
+      console.warn('SW register failed', err);
+    });
+  }
+});
+</script>
+</body>
+</html>
